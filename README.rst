@@ -94,11 +94,11 @@ Sample response
                 "type": "CharField", "max_length": 255,
                 "name": "title",
                 "verbose_name": "title",
-                "help_text": "", "blank": False, "null": False, "editable": True, "required": True},
+                "help_text": "", "blank": false, "null": false, "editable": true, "required": true},
             {
                 "type": "ForeignKey",
                 "name": "publisher", "verbose_name": "publisher", "help_text": "",
-                "blank": False, "null": False, "editable": True, "required": True,
+                "blank": false, "null": false, "editable": true, "required": true,
                 "data": [
                     {"id": 47, "name": "pub0"},
                     {"id": 48, "name": "pub1"},
@@ -108,7 +108,7 @@ Sample response
             {
                 "type": "ManyToManyField",
                 "name": "authors", "verbose_name": "authors", "help_text": "",
-                "blank": False, "null": False, "editable": True, "required": True,
+                "blank": false, "null": false, "editable": true, "required": true,
                 "data": [
                     {"id": 37, "name": "author0"},
                     {"id": 38, "name": "author1"},
