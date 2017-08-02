@@ -24,11 +24,17 @@ DRFSerializerOrMimicSerializerType = t.Type[
 class MetaData:
     URL_PK_PLACEHOLDER = 'object_pk'
 
+    # current obj (set in runtime)
+    obj = None
+
+    # current view (set in runtime)
+    view = None
+
+    # current request sets in runtime with determine_metadata method
+    request: t.Union[HttpRequest, None] = None
+
     # django model
     model: t.Union[models.Model, None] = None
-
-    # sets in runtime with determine_metadata method
-    request: t.Union[HttpRequest, None] = None
 
     # fields included into metadata['fields']
     fields: t.List[str] = []
@@ -63,21 +69,23 @@ class MetaData:
     update_fields: t.Dict[str, dict] = {}
 
     # noinspection PyPep8Naming,PyMethodMayBeStatic
-    def get_NAME_serializer(self, field, qs) -> Serializer:
+    def get_NAME_serializer(self, field: models.Field, qs: models.QuerySet, obj=None) -> Serializer:
         """
         Returns serializer <NAME> field. This method (`get_NAME_serializer`) is not supposed to use directly.
-        :param field:
-        :param qs:
+        :param obj: optional obj passed to method
+        :param field: model field
+        :param qs: queryset
         :return: Serializer
         """
         raise Exception()
 
     # noinspection PyPep8Naming,PyMethodMayBeStatic
-    def get_NAME_queryset(self, field) -> models.QuerySet:
+    def get_NAME_queryset(self, field: models.Field, obj=None) -> models.QuerySet:
         """
         Redefines field <NAME> queryset (fk, m2m, etc. querysets).
             This method (`get_NAME_queryset`) is not supposed to use directly.
         :param field:
+        :param obj: optional obj passed to method
         :return: QuerySet()
         """
         raise Exception()
@@ -208,8 +216,14 @@ class MetaData:
 
         return d
 
-    def determine_metadata(self, request: HttpRequest, view: APIView):
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
+    def get_obj(self, request: t.Union[HttpRequest, None], view: t.Union[APIView, None]) -> t.Any:
+        return None
+
+    def determine_metadata(self, request: HttpRequest, view: t.Union[APIView, None], obj: t.Any=None):
         self.request = request
+        self.view = view
+        self.obj = obj or self.get_obj(request, view)
 
         if isinstance(self.model, str):
             self.model = django.apps.apps.get_model(*self.model.split('.'))
@@ -217,7 +231,7 @@ class MetaData:
         # noinspection PyProtectedMember
         return {
             'title': self.model._meta.verbose_name,
-            'description': view.get_view_description(),
+            'description': view.get_view_description() if view else '',
             'fields': self.get_meta(),
         }
 
@@ -262,13 +276,30 @@ class CustomMetadata:
     """
     Metadata class for non-model forms
     """
+    obj = None
+    view = None
     fields = []
     order = []
     request = None
     title = None
     action_name = None
 
-    def get_meta(self, obj=None) -> t.Generator[t.Dict, None, None]:
+    # noinspection PyPep8Naming
+    def get_NAME(self, request: HttpRequest) -> dict:
+        """
+        Method creates field on the fly in runtime. Method must return dict with required name key
+        :param request: HttpRequest()
+        :return: {
+            'name': '<real field name>'
+        }
+        """
+        raise Exception()
+
+    # noinspection PyPep8Naming
+    def get_field_NAME(self, request: HttpRequest) -> dict:
+        raise Exception()
+
+    def get_meta(self) -> t.Generator[t.Dict, None, None]:
         """
         :return: generator
         list(metadata_obj.get_meta()) -> [abstract_field_obj1, abstract_field_obj2, ...]
@@ -284,7 +315,7 @@ class CustomMetadata:
             if not k.startswith('get_'):
                 continue
             # check dynamic get_%s fields
-            # методы get_%s должны возвращать {'name': 'qwe'}
+            # method get_%s must return {'name': '<NAME>'}, where <name> is a real field name
             res = v_callable(self, self.request)
             fields_by_name[res['name']] = res
 
@@ -292,29 +323,25 @@ class CustomMetadata:
 
         for field_name in fields_order:
             field_value = fields_by_name[field_name]
-            # метод должен вернуть dict, которым будет обновлено поле
+            # method should update field with returned dict
             method = getattr(self, 'get_field_%s' % field_name, None)
             if callable(method):
                 field_value.update(method(field_name, self.request))
 
             yield field_value
 
-    def determine_metadata(self, request, obj=None) -> t.Dict:
-        """
-        Returns metadata dict with fields and names
-        :param request: object of HTTP request
-        :param obj: view instance object
-        :return: dict
-        metadata_obj.determine_metadata(request, view_obj) -> {
-            'title': 'Get some privileges',
-            'description': 'Become a member of fsociety',
-            'action_name': 'OK',
-            'fields': generator
-        }
-        """
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
+    def get_obj(self, request: t.Union[HttpRequest, None], view: t.Union[APIView or None]) -> t.Any:
+        return None
+
+    def determine_metadata(self, request: HttpRequest, view: t.Union[APIView, None], obj: t.Any = None):
         self.request = request
+        self.view = view
+        self.obj = obj or self.get_obj(request, view)
+        # self.view = view
         return {
             'title': self.title or '',
             'action_name': self.action_name or 'OK',
-            'fields': self.get_meta(obj),
+            'description': view.get_view_description() if view else '',
+            'fields': self.get_meta(),
         }

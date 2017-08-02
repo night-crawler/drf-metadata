@@ -1,12 +1,11 @@
 import json
-from pprint import pprint
 
 from django.http import HttpRequest
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 
-from drf_metadata.meta import MetaData
+from drf_metadata.meta import MetaData, AbstractField, CustomMetadata
 from pytests.test_app.models import Author, Book, Publisher
 
 
@@ -61,6 +60,19 @@ class BookMetaData(MetaData):
 
 class PublisherMetaData(MetaData):
     model = Publisher
+
+
+class ImpersonateMetadata(CustomMetadata):
+    title = 'View site as another user'
+    action_name = 'Impersonate'
+
+    fields = (
+        AbstractField(type='ForeignKey',
+                      name='user_id',
+                      verbose_name='User',
+                      data='/data/',
+                      required=True),
+    )
 
 
 # noinspection PyMethodMayBeStatic
@@ -195,5 +207,97 @@ class MetaDataTest:
         assert get_field_by_name(metadata, 'authors')['omg'] == {'lol': 1}
 
 
+# noinspection PyMethodMayBeStatic
 class AbstractFieldTest:
-    pass
+    def test_field(self):
+        field_data = AbstractField(
+            type='ForeignKey',
+            name='user_id',
+            verbose_name='User',
+            formatter='user',
+            data='/data',
+            required=True)
+        assert field_data == {
+            'type': 'ForeignKey',
+            'name': 'user_id', 'verbose_name': 'User', 'help_text': '',
+            'blank': True, 'null': False, 'required': True,
+            'formatter': 'user', 'data': '/data',
+        }
+
+
+# noinspection PyMethodMayBeStatic
+class CustomMetaDataTest:
+    def test_init(self):
+        _metadata = ImpersonateMetadata().determine_metadata(HttpRequest(), MyAPIView())
+        metadata = force_evaluate(_metadata)
+
+        assert metadata == {
+            'title': 'View site as another user',
+            'action_name': 'Impersonate',
+            'description': 'description',
+            'fields': [
+                {
+                    'data': '/data/',
+                    'name': 'user_id',
+                    'verbose_name': 'User',
+                    'required': True, 'help_text': '',
+                    'blank': True,
+                    'null': False,
+                    'type': 'ForeignKey'
+                }
+            ]
+        }
+
+    # noinspection PyPep8Naming
+    def test__get_NAME(self):
+        # noinspection PyMethodMayBeStatic
+        class MethodMetadata(CustomMetadata):
+            title = 'title'
+            action_name = 'action'
+
+            def get_superfield(self, request):
+                return {
+                    'name': 'hero',
+                    'super': True
+                }
+
+            def get_lol(self, request):
+                return {
+                    'name': 'lol',
+                    'super': False
+                }
+
+        _metadata = MethodMetadata().determine_metadata(HttpRequest(), MyAPIView())
+        metadata = force_evaluate(_metadata)
+
+        assert metadata == {
+            'title': 'title',
+            'action_name': 'action',
+            'description': 'description',
+            'fields': [
+                {'name': 'hero', 'super': True},
+                {'name': 'lol', 'super': False},
+            ]
+        }
+
+    # noinspection PyPep8Naming
+    def test__get_field_NAME(self):
+        class CustomImpersonateMetadata(ImpersonateMetadata):
+            def get_field_user_id(self, field_name, request):
+                return {
+                    'lol': 1
+                }
+
+        _metadata = CustomImpersonateMetadata().determine_metadata(HttpRequest(), MyAPIView())
+        metadata = force_evaluate(_metadata)
+        assert metadata == {
+            'title': 'View site as another user', 'action_name': 'Impersonate', 'description': 'description',
+            'fields': [
+                {
+                    'type': 'ForeignKey', 'name': 'user_id', 'verbose_name': 'User',
+                    'required': True, 'blank': True, 'null': False, 'help_text': '',
+                    'data': '/data/',
+                    'lol': 1
+                }
+            ]
+        }
