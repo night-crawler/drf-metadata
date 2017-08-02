@@ -88,31 +88,31 @@ Sample response
 .. code:: json
 
     {
-        'title': 'book', 'description': 'description',
-        'fields': [
+        "title": "book", "description": "description",
+        "fields": [
             {
-                'type': 'CharField', 'max_length': 255,
-                'name': 'title',
-                'verbose_name': 'title',
-                'help_text': '', 'blank': False, 'null': False, 'editable': True, 'required': True},
+                "type": "CharField", "max_length": 255,
+                "name": "title",
+                "verbose_name": "title",
+                "help_text": "", "blank": False, "null": False, "editable": True, "required": True},
             {
-                'type': 'ForeignKey',
-                'name': 'publisher', 'verbose_name': 'publisher', 'help_text': '',
-                'blank': False, 'null': False, 'editable': True, 'required': True,
-                'data': [
-                    {'id': 47, 'name': 'pub0'},
-                    {'id': 48, 'name': 'pub1'},
-                    {'id': 49, 'name': 'pub2'}
+                "type": "ForeignKey",
+                "name": "publisher", "verbose_name": "publisher", "help_text": "",
+                "blank": False, "null": False, "editable": True, "required": True,
+                "data": [
+                    {"id": 47, "name": "pub0"},
+                    {"id": 48, "name": "pub1"},
+                    {"id": 49, "name": "pub2"}
                 ]
             },
             {
-                'type': 'ManyToManyField',
-                'name': 'authors', 'verbose_name': 'authors', 'help_text': '',
-                'blank': False, 'null': False, 'editable': True, 'required': True,
-                'data': [
-                    {'id': 37, 'name': 'author0'},
-                    {'id': 38, 'name': 'author1'},
-                    {'id': 39, 'name': 'author2'}
+                "type": "ManyToManyField",
+                "name": "authors", "verbose_name": "authors", "help_text": "",
+                "blank": False, "null": False, "editable": True, "required": True,
+                "data": [
+                    {"id": 37, "name": "author0"},
+                    {"id": 38, "name": "author1"},
+                    {"id": 39, "name": "author2"}
                 ]
             }
         ]
