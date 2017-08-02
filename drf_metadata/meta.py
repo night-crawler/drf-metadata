@@ -10,15 +10,35 @@ from rest_framework.serializers import Serializer
 from rest_framework.views import APIView
 
 DRFMimicSerializer = namedtuple('DRFMimicSerializer', ['data'])
-DRFSerializerOrMimicSerializerType = t.Type[t.Union[Serializer, t.Callable[DRFMimicSerializer]]]
+DRFSerializerOrMimicSerializerType = t.Type[
+    t.Union[
+        Serializer,  # default DRF serializer
+        t.Callable[  # or callable that looks like DRF serializer and returns DRFMimicSerializer
+            [models.QuerySet, t.Optional[bool]],
+            DRFMimicSerializer
+        ]
+    ]
+]
 
 
 class MetaData:
     URL_PK_PLACEHOLDER = 'object_pk'
 
+    # django model
     model: t.Union[models.Model, None] = None
+
+    # sets in runtime with determine_metadata method
     request: t.Union[HttpRequest, None] = None
+
+    # fields included into metadata['fields']
     fields: t.List[str] = []
+
+    # fields excluded from metadata['fields']
+    exclude: t.List[str] = []
+
+    # do not include any data markers in metadata response
+    no_data: t.List[str] = []
+
     attr_list = [
         'name', 'verbose_name', 'help_text',
         'blank', 'null',
@@ -27,18 +47,20 @@ class MetaData:
         # 'auto_created', 'is_relation', 'hidden', 'concrete',
     ]
 
-    update_fields = {}
-
-    exclude: t.List[str] = []
     include_hidden = False
     include_parents = True
     concrete_in = [True]
     auto_created_in = [False]
     editable_in = [True]
 
+    # serializers mapping {'field_name': MySerializer}
     serializers: t.Dict[str, DRFSerializerOrMimicSerializerType] = {}
-    dataset_urls = {}
-    no_data = []
+
+    # if no inline data needed, but data source url specified
+    dataset_urls: t.Dict[str, str] = {}
+
+    # update (patch) field dict bundles with specified data; called last
+    update_fields: t.Dict[str, dict] = {}
 
     # noinspection PyPep8Naming,PyMethodMayBeStatic
     def get_NAME_serializer(self, field, qs) -> Serializer:

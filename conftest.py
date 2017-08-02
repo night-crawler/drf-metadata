@@ -1,10 +1,12 @@
 import os
-import pytest
 
 
-@pytest.fixture(scope='session', autouse=True)
-def init():
+def pytest_configure():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pytests.django_settings')
-
     import django
     django.setup()
+
+    from django.core.management import execute_from_command_line
+
+    execute_from_command_line(['manage.py', 'makemigrations', 'test_app'])
+    execute_from_command_line(['manage.py', 'migrate'])
