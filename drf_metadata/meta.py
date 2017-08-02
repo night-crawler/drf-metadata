@@ -334,7 +334,7 @@ class CustomMetadata:
     def get_obj(self, request: t.Union[HttpRequest, None], view: t.Union[APIView or None]) -> t.Any:
         return None
 
-    def determine_metadata(self, request: HttpRequest, view: t.Union[APIView, None], obj: t.Any = None):
+    def determine_metadata(self, request: HttpRequest, view: t.Union[APIView, None]=None, obj: t.Any=None):
         self.request = request
         self.view = view
         self.obj = obj or self.get_obj(request, view)
