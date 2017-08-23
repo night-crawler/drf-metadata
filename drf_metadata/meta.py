@@ -4,10 +4,12 @@ import typing as t
 from collections import OrderedDict, namedtuple
 
 from django.db import models
-from django.http.request import HttpRequest
+from django.http.request import HttpRequest as DjangoHttpRequest
 from django.utils.encoding import force_text
 from rest_framework.serializers import Serializer
 from rest_framework.views import APIView
+from rest_framework.request import Request as DRFHttpRequest
+
 
 DRFMimicSerializer = namedtuple('DRFMimicSerializer', ['data'])
 DRFSerializerOrMimicSerializerType = t.Type[
@@ -19,6 +21,9 @@ DRFSerializerOrMimicSerializerType = t.Type[
         ]
     ]
 ]
+
+
+Request = t.Union[DjangoHttpRequest, DRFHttpRequest]
 
 
 class MetaData:
@@ -34,7 +39,7 @@ class MetaData:
     view: t.Optional[APIView] = None
 
     # current request sets in runtime with determine_metadata method
-    request: t.Optional[HttpRequest] = None
+    request: t.Optional[Request] = None
 
     # django model
     model: t.Optional[models.Model] = None
@@ -220,17 +225,17 @@ class MetaData:
         return d
 
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def get_obj(self, request: t.Optional[HttpRequest], view: t.Optional[APIView]) -> t.Any:
+    def get_obj(self, request: t.Optional[Request], view: t.Optional[APIView]) -> t.Any:
         return None
 
     # noinspection PyUnusedLocal,PyProtectedMember
     def get_title(self,
-                  request: t.Optional[HttpRequest],
+                  request: t.Optional[Request],
                   view: t.Optional[APIView],
                   obj: t.Optional[t.Any]=None) -> str:
         return self.title or self.model._meta.verbose_name
 
-    def determine_metadata(self, request: HttpRequest, view: t.Optional[APIView]=None, obj: t.Any=None):
+    def determine_metadata(self, request: Request, view: t.Optional[APIView]=None, obj: t.Any=None):
         self.request = request
         self.view = view
         self.obj = obj or self.get_obj(request, view)
@@ -296,7 +301,7 @@ class CustomMetadata:
     action_name = None
 
     # noinspection PyPep8Naming
-    def get_NAME(self, request: HttpRequest) -> dict:
+    def get_NAME(self, request: Request) -> dict:
         """
         Method creates field on the fly in runtime. Method must return dict with required name key
         :param request: HttpRequest()
@@ -307,7 +312,7 @@ class CustomMetadata:
         raise Exception()
 
     # noinspection PyPep8Naming
-    def get_field_NAME(self, request: HttpRequest) -> dict:
+    def get_field_NAME(self, request: Request) -> dict:
         raise Exception()
 
     def get_meta(self) -> t.Generator[t.Dict, None, None]:
@@ -342,17 +347,17 @@ class CustomMetadata:
             yield field_value
 
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def get_obj(self, request: t.Optional[HttpRequest], view: t.Optional[APIView]) -> t.Any:
+    def get_obj(self, request: t.Optional[Request], view: t.Optional[APIView]) -> t.Any:
         return None
 
     # noinspection PyUnusedLocal,PyProtectedMember
     def get_title(self,
-                  request: t.Optional[HttpRequest],
+                  request: t.Optional[Request],
                   view: t.Optional[APIView],
                   obj: t.Optional[t.Any]=None) -> str:
         return self.title or ''
 
-    def determine_metadata(self, request: HttpRequest, view: t.Optional[APIView]=None, obj: t.Any=None) -> dict:
+    def determine_metadata(self, request: Request, view: t.Optional[APIView]=None, obj: t.Any=None) -> dict:
         self.request = request
         self.view = view
         self.obj = obj or self.get_obj(request, view)
