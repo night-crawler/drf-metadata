@@ -24,17 +24,20 @@ DRFSerializerOrMimicSerializerType = t.Type[
 class MetaData:
     URL_PK_PLACEHOLDER = 'object_pk'
 
+    # title
+    title: t.Optional[str] = None
+
     # current obj (set in runtime)
     obj = None
 
     # current view (set in runtime)
-    view = None
+    view: t.Optional[APIView] = None
 
     # current request sets in runtime with determine_metadata method
-    request: t.Union[HttpRequest, None] = None
+    request: t.Optional[HttpRequest] = None
 
     # django model
-    model: t.Union[models.Model, None] = None
+    model: t.Optional[models.Model] = None
 
     # fields included into metadata['fields']
     fields: t.List[str] = []
@@ -217,20 +220,28 @@ class MetaData:
         return d
 
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def get_obj(self, request: t.Union[HttpRequest, None], view: t.Union[APIView, None]) -> t.Any:
+    def get_obj(self, request: t.Optional[HttpRequest], view: t.Optional[APIView]) -> t.Any:
         return None
 
-    def determine_metadata(self, request: HttpRequest, view: t.Union[APIView, None]=None, obj: t.Any=None):
+    # noinspection PyUnusedLocal,PyProtectedMember
+    def get_title(self,
+                  request: t.Optional[HttpRequest],
+                  view: t.Optional[APIView],
+                  obj: t.Optional[t.Any]=None) -> str:
+        return self.title or self.model._meta.verbose_name
+
+    def determine_metadata(self, request: HttpRequest, view: t.Optional[APIView]=None, obj: t.Any=None):
         self.request = request
         self.view = view
         self.obj = obj or self.get_obj(request, view)
 
         if isinstance(self.model, str):
+            # noinspection PyUnresolvedReferences
             self.model = django.apps.apps.get_model(*self.model.split('.'))
 
-        # noinspection PyProtectedMember
+        # noinspection PyProtectedMember,PyUnresolvedReferences
         return {
-            'title': self.model._meta.verbose_name,
+            'title': self.get_title(request, view, obj),
             'description': view.get_view_description() if view else '',
             'fields': self.get_meta(),
         }
@@ -331,16 +342,23 @@ class CustomMetadata:
             yield field_value
 
     # noinspection PyMethodMayBeStatic,PyUnusedLocal
-    def get_obj(self, request: t.Union[HttpRequest, None], view: t.Union[APIView or None]) -> t.Any:
+    def get_obj(self, request: t.Optional[HttpRequest], view: t.Optional[APIView]) -> t.Any:
         return None
 
-    def determine_metadata(self, request: HttpRequest, view: t.Union[APIView, None]=None, obj: t.Any=None):
+    # noinspection PyUnusedLocal,PyProtectedMember
+    def get_title(self,
+                  request: t.Optional[HttpRequest],
+                  view: t.Optional[APIView],
+                  obj: t.Optional[t.Any]=None) -> str:
+        return self.title or ''
+
+    def determine_metadata(self, request: HttpRequest, view: t.Optional[APIView]=None, obj: t.Any=None) -> dict:
         self.request = request
         self.view = view
         self.obj = obj or self.get_obj(request, view)
         # self.view = view
         return {
-            'title': self.title or '',
+            'title': self.get_title(request, view, obj),
             'action_name': self.action_name or 'OK',
             'description': view.get_view_description() if view else '',
             'fields': self.get_meta(),

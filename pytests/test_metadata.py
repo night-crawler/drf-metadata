@@ -98,6 +98,15 @@ class MetaDataTest:
             ]
         }
 
+    def test__title(self):
+        class CustomBookMetaData(BookMetaData):
+            def get_title(self, request, view, obj):
+                return 'my title'
+
+        _metadata = CustomBookMetaData().determine_metadata(HttpRequest(), MyAPIView())
+        metadata = force_evaluate(_metadata)
+        assert metadata['title'] == 'my title'
+
     def test__model_with_relations(self):
         """
         {
