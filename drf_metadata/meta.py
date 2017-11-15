@@ -208,7 +208,10 @@ class MetaData:
         d['type'] = field.get_internal_type()
         d['required'] = self.is_required(field)
         if field.default != models.NOT_PROVIDED:
-            d['default'] = field.default
+            if callable(field.default):
+                d['default'] = field.default()
+            else:
+                d['default'] = field.default
         if hasattr(field, 'choices') and field.choices:
             d['choices'] = list(self.format_choices(field))
 

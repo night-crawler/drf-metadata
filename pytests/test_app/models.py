@@ -1,4 +1,16 @@
 from django.db import models
+from django.utils.timezone import now
+
+
+def default_date():
+    return now().date()
+
+
+class CallableDefault(models.Model):
+    dt_callable = models.DateField('callable default', default=default_date)
+
+    def __str__(self):
+        return self.dt_callable
 
 
 class Author(models.Model):

@@ -1,29 +1,9 @@
-import json
-
 from django.http import HttpRequest
-from rest_framework import serializers
-from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 
 from drf_metadata.meta import MetaData, AbstractField, CustomMetadata
 from pytests.test_app.models import Author, Book, Publisher
-
-
-# noinspection PyAbstractClass
-class NoneSerializer(serializers.Serializer):
-    pass
-
-
-def force_evaluate(val):
-    s = JSONRenderer().render(val)
-    return json.loads(s)
-
-
-def get_field_by_name(bundle: dict, field_name: str):
-    for field_data in bundle['fields']:
-        if field_data['name'] == field_name:
-            return field_data
-    return None
+from pytests.utils import force_evaluate, get_field_by_name, NoneSerializer
 
 
 def prepare_dataset():
