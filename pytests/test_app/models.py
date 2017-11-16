@@ -6,6 +6,16 @@ def default_date():
     return now().date()
 
 
+class Integers(models.Model):
+    f_integer = models.IntegerField('integer', default=-22)
+    f_positive_integer = models.PositiveIntegerField('positive integer', default=0)
+    f_small_integer = models.SmallIntegerField('small integer', default=13)
+    f_positive_small_integer = models.PositiveSmallIntegerField('positive small integer', default=222)
+
+    f_decimal = models.DecimalField('decimal', max_digits=10, decimal_places=4, default=3.1415)
+    f_float = models.FloatField('float', default=3.14)
+    
+    
 class CallableDefault(models.Model):
     dt_callable = models.DateField('callable default', default=default_date)
 

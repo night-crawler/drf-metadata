@@ -59,6 +59,7 @@ class MetaData:
         'editable',
         'max_length',
         # 'auto_created', 'is_relation', 'hidden', 'concrete',
+        'decimal_places', 'max_digits',
     ]
 
     include_hidden = False
