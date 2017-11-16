@@ -170,6 +170,18 @@ class MetaDataTest:
 
         assert metadata['fields'][2]['data'] == [{}, {}, {}]
 
+    # noinspection PyPep8Naming
+    def test__get_NAME_dataset_url(self):
+        # noinspection PyMethodMayBeStatic
+        class CustomBookMetaData(BookMetaData):
+            def get_publisher_dataset_url(self, field, obj):
+                return 'publisher_url'
+
+        _metadata = CustomBookMetaData().determine_metadata(HttpRequest(), MyAPIView())
+        metadata = force_evaluate(_metadata)
+
+        assert get_field_by_name(metadata, 'publisher')['data'] == 'publisher_url'
+
     def test__dataset_urls(self):
         class CustomBookMetaData(BookMetaData):
             dataset_urls = {

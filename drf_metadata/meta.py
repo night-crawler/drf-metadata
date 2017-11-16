@@ -99,6 +99,17 @@ class MetaData:
         """
         raise Exception()
 
+    # noinspection PyPep8Naming,PyMethodMayBeStatic
+    def get_NAME_dataset_url(self, field: models.Field, obj=None) -> models.QuerySet:
+        """
+        Redefines all dataset_url bindings. Supposed to use in runtime
+            (when there's no ability to pass reverse_lazy, etc.)
+        :param field:
+        :param obj: optional obj passed to method
+        :return: QuerySet()
+        """
+        raise Exception()
+
     # noinspection PyProtectedMember
     def get_field_related_model(self, field_name: str) -> models.Model:
         return self.model._meta.get_field(field_name).related_model
@@ -218,7 +229,10 @@ class MetaData:
 
         if field.related_model:
             if field.name not in self.no_data:
-                if field.name in self.dataset_urls:
+                user_url_getter = getattr(self, 'get_%s_dataset_url' % field.name.lower(), None)
+                if callable(user_url_getter):
+                    d['data'] = user_url_getter(field, self.obj)
+                elif field.name in self.dataset_urls:
                     d['data'] = force_text(self.dataset_urls[field.name])
                 else:
                     d['data'] = self.get_field_related_data(field)
