@@ -1,0 +1,6 @@
+-r requirements/base.txt
+
+bumpversion
+pytest
+pytest-cov
+wheel

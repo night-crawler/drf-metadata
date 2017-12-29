@@ -11,3 +11,4 @@ dist/
 *.egg-info/
 /pytests/test.sqlite
 /pytests/test_app/migrations/
+.coverage

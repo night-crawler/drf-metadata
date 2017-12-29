@@ -18,7 +18,7 @@ def prepare_dataset():
         title='book1',
         publisher=publishers[0],
     )
-    b1.authors = authors[:2]
+    b1.authors.set(authors[:2])
     b1.save()
 
 
