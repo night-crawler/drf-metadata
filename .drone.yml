@@ -1,0 +1,7 @@
+pipeline:
+  run-tests:
+    image: docker.force.fm/msa/python-test:3.6.4
+    commands:
+      - pip install -r requirements/base.txt
+      - pytest . --tb=line
+      - python setup.py install  # check setup.py is valid
