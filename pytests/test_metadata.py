@@ -207,6 +207,35 @@ class MetaDataTest:
         metadata = force_evaluate(_metadata)
         assert get_field_by_name(metadata, 'authors')['omg'] == {'lol': 1}
 
+    # noinspection PyPep8Naming
+    def test__get_NAME_field_meta(self):
+        sentinel = object()
+
+        # noinspection PyMethodMayBeStatic
+        class CustomBookMetaData(BookMetaData):
+            def get_title_field_meta(self, field, obj=None):
+                return {'obj': str(obj), 'name': field.name}
+
+        _metadata = CustomBookMetaData().determine_metadata(HttpRequest(), MyAPIView(), sentinel)
+        metadata = force_evaluate(_metadata)
+        assert get_field_by_name(metadata, 'title') == {'obj': str(sentinel), 'name': 'title'}
+
+    # noinspection PyPep8Naming
+    def test__update_NAME_field_meta(self):
+        sentinel = object()
+
+        # noinspection PyMethodMayBeStatic
+        class CustomBookMetaData(BookMetaData):
+            def update_title_field_meta(self, field, obj=None):
+                return {'something_new': True, 'object': str(obj)}
+
+        _metadata = CustomBookMetaData().determine_metadata(HttpRequest(), MyAPIView(), sentinel)
+        metadata = force_evaluate(_metadata)
+        print(metadata)
+        metadata_field = get_field_by_name(metadata, 'title')
+        assert metadata_field['something_new'] is True
+        assert metadata_field['object'] == str(sentinel)
+
 
 # noinspection PyMethodMayBeStatic
 class AbstractFieldTest:

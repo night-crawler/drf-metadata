@@ -57,18 +57,29 @@ Usage
             }
         }
 
-        # skip serialization
+        # skip serialization (don't include model instances to choice field)
         dataset_urls = {
             'authors': '/author/',
             'publisher': '/publisher/',
         }
 
+        # custom queryset for instance (self has `obj` if you need to filter qs)
         def get_authors_queryset(self, field):
             return Author.objects.filter(name='author0')
 
+        # use custom serializer for field instance(s)
         def get_authors_serializer(self, field):
             # self.request, self.view, self.obj are available in MetaData instance
             return AuthorSerializer
+
+        # update field bundle with runtime values
+        def update_authors_field_meta(field, obj):
+            return {'new': 1, 'obj': str(obj)}
+
+        # use own serializer
+        def get_publisher_field_meta(field, obj):
+            return {'new': 1, 'obj': str(obj)}
+
 
 Usage with django-rest-framework
 --------------------------------

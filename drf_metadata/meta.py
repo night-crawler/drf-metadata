@@ -110,6 +110,26 @@ class MetaData:
         """
         raise Exception()
 
+    # noinspection PyPep8Naming,PyMethodMayBeStatic
+    def get_NAME_field_meta(self, field: models.Field, obj=None) -> dict:
+        """
+        Overrides default field meta serializer behaviour. Supposed to use in runtime       .
+        :param field: Django models.Field instance
+        :param obj: optional obj passed to method
+        :return: dict
+        """
+        raise Exception()
+
+    # noinspection PyPep8Naming,PyMethodMayBeStatic
+    def update_NAME_field_meta(self, field: models.Field, obj=None) -> dict:
+        """
+        Updates field's meta dict bundle with return values.
+        :param field: Django models.Field instance
+        :param obj: optional obj passed to method
+        :return: dict
+        """
+        raise Exception()
+
     # noinspection PyProtectedMember
     def get_field_related_model(self, field_name: str) -> models.Model:
         return self.model._meta.get_field(field_name).related_model
@@ -201,8 +221,13 @@ class MetaData:
         return model.objects.all()
 
     def get_field_meta(self, field: models.Field) -> OrderedDict:
-        d = OrderedDict()
+        # check if we need to override default get_field_meta behaviour
+        get_field_meta = getattr(self, 'get_%s_field_meta' % field.name, None)
+        if callable(get_field_meta):
+            return get_field_meta(field, self.obj)
+
         sentinel = object()
+        d = OrderedDict()
 
         for attr in self.attr_list:
             val = getattr(field, attr, sentinel)
@@ -239,6 +264,11 @@ class MetaData:
 
         data_update = self.update_fields.get(field.name, {})
         d.update(data_update)
+
+        # check if we need to perform runtime update
+        update_field_meta_callback = getattr(self, 'update_%s_field_meta' % field.name, None)
+        if callable(update_field_meta_callback):
+            d.update(update_field_meta_callback(field, self.obj))
 
         return d
 
